@@ -1,0 +1,18 @@
+# Node modules
+node_modules/
+
+# Build / cache / logs
+dist/
+build/
+.env
+*.log
+
+# VS Code or editor settings
+.vscode/
+
+# System files
+.DS_Store
+
+# Custom history folder
+.history/
+
