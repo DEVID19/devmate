@@ -88,23 +88,60 @@ app.use(
 
 //? let me now show you how the middleware work and how we se the middleware
 
-app.use("/admin", Adminauth);
+// app.use("/admin", Adminauth);
 
-app.get("/user/login", userAuth, (req, res, next) => {
-  console.log("user logged successfully");
-  res.send(" User login  successfully");
+// app.get("/user/login", userAuth, (req, res, next) => {
+//   console.log("user logged successfully");
+//   res.send(" User login  successfully");
+// });
+
+// app.get("/admin/getAllData", (req, res, next) => {
+//   console.log("all data get successfully");
+//   res.send("all data get successfully");
+// });
+
+// app.get("/admin/deleteUser", (req, res, next) => {
+//   console.log("delete user successfully");
+//   res.send("User deleted successfully");
+// });
+
+// app.listen(7777, () => {
+//   console.log("Server is listening on port 7777");
+// });
+
+//? below you will learn about the database and can see how the database is been works .. for more info you can check the database.js and the app.jsx and also may be you need to watch the lectures ..
+
+const express = require("express");
+const { Adminauth, userAuth } = require("./middleware/auth");
+
+const connectDB = require("./config/database");
+const app = express();
+const User = require("./Models/User");
+
+app.post("/signup", async (req, res) => {
+  //? Creating the instance of the User model
+  const user = new User({
+    firstName: "Virat",
+    lastName: "Kohli",
+    emailId: "virat@gmail.com",
+    password: "virat@123",
+  });
+
+  try {
+    await user.save();
+    res.send("data Save Successfully");
+  } catch (error) {
+    res.status(400).send("Error in saving the data to database");
+  }
 });
 
-app.get("/admin/getAllData", (req, res, next) => {
-  console.log("all data get successfully");
-  res.send("all data get successfully");
-});
-
-app.get("/admin/deleteUser", (req, res, next) => {
-  console.log("delete user successfully");
-  res.send("User deleted successfully");
-});
-
-app.listen(7777, () => {
-  console.log("Server is listening on port 7777");
-});
+connectDB()
+  .then(() => {
+    console.log("Database connection established...");
+    app.listen(7777, () => {
+      console.log("Server is listening on port 7777");
+    });
+  })
+  .catch((error) => {
+    console.log("Database connot be connected!!");
+  });

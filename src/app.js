@@ -5,13 +5,21 @@ const connectDB = require("./config/database");
 const app = express();
 const User = require("./Models/User");
 
+//& below you see the middleware that provide the functionality that chnage the json data into js object and it is provided by default
+
+app.use(express.json());
+
 app.post("/signup", async (req, res) => {
-  const user = new User({
-    firstName: "Shivaji Maharaj",
-    lastName: "Raje",
-    emaiId: "Raje@gmail.com",
-    password: "Raje@123",
-  });
+  //? Creating the instance of the User model
+
+  const user = new User(req.body);
+
+  // const user = new User({
+  //   firstName: "Virat",
+  //   lastName: "Kohli",
+  //   emailId: "virat@gmail.com",
+  //   password: "virat@123",
+  // });
 
   try {
     await user.save();
