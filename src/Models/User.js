@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      minLength: 2,
+      maxLength: 50,
     },
     lastName: {
       type: String,
@@ -17,10 +19,28 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      validate: {
+        validator: (value) => {
+          validator.isEmail(value);
+        },
+        message: "Invalid email format",
+      },
     },
     password: {
       type: String,
       required: true,
+      validate: {
+        validator: (value) =>
+          validator.isStrongPassword(value, {
+            minLength: 8,
+            minLowercase: 1,
+            minUppercase: 1,
+            minNumbers: 1,
+            minSymbols: 1,
+          }),
+        message:
+          "Password is not strong enough (8 chars, uppercase, lowercase, number, symbol required)",
+      },
     },
     age: {
       type: Number,
@@ -44,6 +64,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "https://example.com/default-photo.jpg",
+      validate: {
+        validator: (value) => {
+          validator.isURL(value);
+        },
+        message: "Invalid URL format",
+      },
     },
     about: {
       type: String,
@@ -52,6 +78,12 @@ const userSchema = new mongoose.Schema(
     githubURL: {
       type: String,
       trim: true,
+      validate: {
+        validator: (value) => {
+          validator.isURL(value);
+        },
+        message: "Invalid URL format",
+      },
     },
   },
   {

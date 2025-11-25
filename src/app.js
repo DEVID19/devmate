@@ -4,16 +4,14 @@ const { Adminauth, userAuth } = require("./middleware/auth");
 const connectDB = require("./config/database");
 const app = express();
 const User = require("./Models/User");
+const { ValidateSignUp } = require("./utils/Validation");
+const bcrypt = require("bcryptjs");
 
 //& below you see the middleware that provide the functionality that chnage the json data into js object and it is provided by default
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-  //? Creating the instance of the User model
-
-  const user = new User(req.body);
-
   // const user = new User({
   //   firstName: "Virat",
   //   lastName: "Kohli",
@@ -22,12 +20,49 @@ app.post("/signup", async (req, res) => {
   // });
 
   try {
+    //! Validate the data before creating the user
+    ValidateSignUp(req.body);
+
+    //Encrypt the password before saving to the database
+    const { firstName, lastName, emailId, password } = req.body;
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    //? Creating the instance of the User model
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
+
     await user.save();
     res.send("data Save Successfully");
   } catch (error) {
     res.status(400).send("Error : " + error.message);
   }
 });
+
+//! login api
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const user = await User.findOne({ emailId });
+    if (!user) {
+      throw new Error("Invalid email or password");
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      throw new Error("Invalid email or password");
+    }
+
+    res.send("Login Successful");
+  } catch (error) {
+    res.status(400).send("Error : " + error.message);
+  }
+});
+
 //  Get user data by using the emailid
 
 app.get("/user", async (req, res) => {
