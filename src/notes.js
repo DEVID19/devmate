@@ -118,23 +118,172 @@ const connectDB = require("./config/database");
 const app = express();
 const User = require("./Models/User");
 
-app.post("/signup", async (req, res) => {
-  //? Creating the instance of the User model
-  const user = new User({
-    firstName: "Virat",
-    lastName: "Kohli",
-    emailId: "virat@gmail.com",
-    password: "virat@123",
-  });
+// app.post("/signup", async (req, res) => {
+//   //? Creating the instance of the User model
+//   const user = new User({
+//     firstName: "Virat",
+//     lastName: "Kohli",
+//     emailId: "virat@gmail.com",
+//     password: "virat@123",
+//   });
 
+//   try {
+//     await user.save();
+//     res.send("data Save Successfully");
+//   } catch (error) {
+//     res.status(400).send("Error in saving the data to database");
+//   }
+// });
+
+app.post("/signup", async (req, res) => {
+  // const user = new User({
+  //   firstName: "Virat",
+  //   lastName: "Kohli",
+  //   emailId: "virat@gmail.com",
+  //   password: "virat@123",
+  // });
   try {
+    //! Validate the data before creating the user
+    ValidateSignUp(req);
+    //Encrypt the password before saving to the database
+    const { firstName, lastName, emailId, password } = req.body;
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    //? Creating the instance of the User model
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
+
     await user.save();
     res.send("data Save Successfully");
   } catch (error) {
-    res.status(400).send("Error in saving the data to database");
+    res.status(400).send("Error : " + error.message);
   }
 });
 
+//! login api
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const user = await User.findOne({ emailId });
+    if (!user) {
+      throw new Error("Invalid email or password");
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (isPasswordMatch) {
+      //Create the jwt token
+
+      const token = jwt.sign({ _id: user._id }, "DEV@Tinder$790");
+
+      res.cookie("token", token);
+
+      //Add the token to the cookie and send the response back to the user
+
+      res.send("Login Successful");
+    } else {
+      throw new Error("Invalid email or password");
+    }
+  } catch (error) {
+    res.status(400).send("Error : " + error.message);
+  }
+});
+
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+    // Validate my token
+    const user = req.user;
+    res.send("User  Data: " + user);
+  } catch (error) {
+    res.status(400).send("Error : " + error.message);
+  }
+});
+
+//  Get user data by using the emailid
+
+app.get("/user", async (req, res) => {
+  try {
+    const userEmail = req.body.emailId;
+    console.log("userEmail is :", userEmail);
+    const users = await User.find({ emailId: userEmail });
+    res.send(users);
+  } catch (error) {
+    res.status(400).send("Error in finding the user");
+  }
+});
+
+// get all data in the database
+
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.send(users);
+  } catch (error) {
+    res.status(400).send("Error in finding the entire data in the database");
+  }
+});
+
+//* delete the documents in the database usingb the email id and the userid
+//? deleted using the emailid
+// app.delete("/delete", async (req, res) => {
+//   try {
+//     const userEmail = req.body.emailId;
+//     const users = await User.deleteOne({ emailId: userEmail });
+//     res.send("data is deleted successfully using the emailid");
+//   } catch (error) {
+//     res.status(400).send("Unable to delete the database ");
+//   }
+// });
+//! deleted using the userid
+
+app.delete("/delete", async (req, res) => {
+  try {
+    const userId = req.body._id;
+    const users = await User.deleteOne({ _id: userId });
+    res.send("data successfully deleted using the _id ");
+  } catch (error) {
+    res.status(400).send("Unable to delete the database");
+  }
+});
+
+//* update the document using the userid
+
+app.patch("/update", async (req, res) => {
+  try {
+    const userId = req.body._id;
+
+    // Check if _id is provided
+    if (!userId) {
+      return res.status(400).send("User ID (_id) is required in request body");
+    }
+
+    // Remove _id from the update data
+    const { _id, ...updatedData } = req.body;
+
+    // Check if there's any data to update
+    if (Object.keys(updatedData).length === 0) {
+      return res.status(400).send("No fields to update");
+    }
+
+    const user = await User.findByIdAndUpdate(userId, updatedData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    res.send("Successfully updated the data");
+  } catch (error) {
+    console.error("Update Error:", error.message);
+    res.status(400).send("Unable to update the database: " + error.message);
+  }
+});
 
 //! jwt token is know as json web token .. it is use to provide the security to the api .. like when user login to the application then the server will provide a token to the user and this token is use to access the protected routes .. like if user want to access the protected routes then he need to provide the token to the server .. and server will verify the token and if token is valid then user can access the protected routes .. and if token is invalid then user cannot access the protected routes .. the protected routes is the routes which require authentication to access .. like user profile, user settings etc ..
 

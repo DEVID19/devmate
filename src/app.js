@@ -1,5 +1,5 @@
 const express = require("express");
-const { Adminauth, userAuth } = require("./middleware/auth");
+const { userAuth } = require("./middleware/auth");
 
 const connectDB = require("./config/database");
 const app = express();
@@ -72,21 +72,23 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
   try {
     // Validate my token
-    const token = req.cookies.token;
+    const user = req.user;
+    res.send("User  Data: " + user);
+  } catch (error) {
+    res.status(400).send("Error : " + error.message);
+  }
+});
 
-    if (!token) {
-      return res.send("Unauthorized: No token provided");
-    }
-
-    // Verify the token
-    const decoded = jwt.verify(token, "DEV@Tinder$790");
-
-    const user = await User.findById(decoded._id);
-  
-    res.send("User  Data: " + JSON.stringify(user));
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+  try {
+    res.send(
+      "Connection Request Sent Successfully " +
+        req.user.firstName +
+        " send the request"
+    );
   } catch (error) {
     res.status(400).send("Error : " + error.message);
   }
