@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
 
 const userSchema = new mongoose.Schema(
   {
@@ -20,9 +21,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       validate: {
-        validator: (value) => {
-          validator.isEmail(value);
-        },
+        validator: (value) => validator.isEmail(value),
         message: "Invalid email format",
       },
     },

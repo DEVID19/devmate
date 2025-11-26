@@ -6,10 +6,13 @@ const app = express();
 const User = require("./Models/User");
 const { ValidateSignUp } = require("./utils/Validation");
 const bcrypt = require("bcrypt");
-
+const cookieParser = require("cookie-parser");
+var jwt = require("jsonwebtoken");
 //& below you see the middleware that provide the functionality that chnage the json data into js object and it is provided by default
 
 app.use(express.json());
+
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   // const user = new User({
@@ -18,11 +21,9 @@ app.post("/signup", async (req, res) => {
   //   emailId: "virat@gmail.com",
   //   password: "virat@123",
   // });
-
   try {
     //! Validate the data before creating the user
-    ValidateSignUp(req.body);
-
+    ValidateSignUp(req);
     //Encrypt the password before saving to the database
     const { firstName, lastName, emailId, password } = req.body;
     const passwordHash = await bcrypt.hash(password, 10);
@@ -54,10 +55,38 @@ app.post("/login", async (req, res) => {
 
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (isPasswordMatch) {
+      //Create the jwt token
+
+      const token = jwt.sign({ _id: user._id }, "DEV@Tinder$790");
+
+      res.cookie("token", token);
+
+      //Add the token to the cookie and send the response back to the user
+
       res.send("Login Successful");
-    }else {
+    } else {
       throw new Error("Invalid email or password");
     }
+  } catch (error) {
+    res.status(400).send("Error : " + error.message);
+  }
+});
+
+app.get("/profile", async (req, res) => {
+  try {
+    // Validate my token
+    const token = req.cookies.token;
+
+    if (!token) {
+      return res.send("Unauthorized: No token provided");
+    }
+
+    // Verify the token
+    const decoded = jwt.verify(token, "DEV@Tinder$790");
+
+    const user = await User.findById(decoded._id);
+  
+    res.send("User  Data: " + JSON.stringify(user));
   } catch (error) {
     res.status(400).send("Error : " + error.message);
   }
