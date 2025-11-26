@@ -53,11 +53,11 @@ app.post("/login", async (req, res) => {
       throw new Error("Invalid email or password");
     }
 
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    const isPasswordMatch = await user.validatePassword(password);
     if (isPasswordMatch) {
       //Create the jwt token
 
-      const token = jwt.sign({ _id: user._id }, "DEV@Tinder$790");
+      const token = await user.getJWT();
 
       res.cookie("token", token);
 
