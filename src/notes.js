@@ -135,6 +135,9 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+
+//! jwt token is know as json web token .. it is use to provide the security to the api .. like when user login to the application then the server will provide a token to the user and this token is use to access the protected routes .. like if user want to access the protected routes then he need to provide the token to the server .. and server will verify the token and if token is valid then user can access the protected routes .. and if token is invalid then user cannot access the protected routes .. the protected routes is the routes which require authentication to access .. like user profile, user settings etc ..
+
 connectDB()
   .then(() => {
     console.log("Database connection established...");

@@ -5,7 +5,7 @@ const connectDB = require("./config/database");
 const app = express();
 const User = require("./Models/User");
 const { ValidateSignUp } = require("./utils/Validation");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 
 //& below you see the middleware that provide the functionality that chnage the json data into js object and it is provided by default
 
@@ -53,11 +53,11 @@ app.post("/login", async (req, res) => {
     }
 
     const isPasswordMatch = await bcrypt.compare(password, user.password);
-    if (!isPasswordMatch) {
+    if (isPasswordMatch) {
+      res.send("Login Successful");
+    }else {
       throw new Error("Invalid email or password");
     }
-
-    res.send("Login Successful");
   } catch (error) {
     res.status(400).send("Error : " + error.message);
   }
