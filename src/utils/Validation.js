@@ -25,4 +25,27 @@ const ValidateSignUp = (req) => {
   }
 };
 
-module.exports = { ValidateSignUp };
+const ValidateEditProfile = (req) => {
+  const EditableFields = [
+    "firstName",
+    "lastName",
+    "age",
+    "about",
+    "photoURL",
+    "gender",
+    "skills",
+    "githubURL",
+  ];
+
+  const isEditAllowed = Object.keys(req.body).every((field) =>
+    EditableFields.includes(field)
+  );
+
+  if (!isEditAllowed) {
+    throw new Error(`you are not allowed to edit Email  and password  fields`);
+  }
+
+  return isEditAllowed;
+};
+
+module.exports = { ValidateSignUp , ValidateEditProfile };
