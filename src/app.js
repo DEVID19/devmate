@@ -8,173 +8,20 @@ const { ValidateSignUp } = require("./utils/Validation");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 var jwt = require("jsonwebtoken");
+
 //& below you see the middleware that provide the functionality that chnage the json data into js object and it is provided by default
 
 app.use(express.json());
 
 app.use(cookieParser());
 
-app.post("/signup", async (req, res) => {
-  // const user = new User({
-  //   firstName: "Virat",
-  //   lastName: "Kohli",
-  //   emailId: "virat@gmail.com",
-  //   password: "virat@123",
-  // });
-  try {
-    //! Validate the data before creating the user
-    ValidateSignUp(req);
-    //Encrypt the password before saving to the database
-    const { firstName, lastName, emailId, password } = req.body;
-    const passwordHash = await bcrypt.hash(password, 10);
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
 
-    //? Creating the instance of the User model
-    const user = new User({
-      firstName,
-      lastName,
-      emailId,
-      password: passwordHash,
-    });
-
-    await user.save();
-    res.send("data Save Successfully");
-  } catch (error) {
-    res.status(400).send("Error : " + error.message);
-  }
-});
-
-//! login api
-
-app.post("/login", async (req, res) => {
-  try {
-    const { emailId, password } = req.body;
-    const user = await User.findOne({ emailId });
-    if (!user) {
-      throw new Error("Invalid email or password");
-    }
-
-    const isPasswordMatch = await user.validatePassword(password);
-    if (isPasswordMatch) {
-      //Create the jwt token
-
-      const token = await user.getJWT();
-
-      res.cookie("token", token);
-
-      //Add the token to the cookie and send the response back to the user
-
-      res.send("Login Successful");
-    } else {
-      throw new Error("Invalid email or password");
-    }
-  } catch (error) {
-    res.status(400).send("Error : " + error.message);
-  }
-});
-
-app.get("/profile", userAuth, async (req, res) => {
-  try {
-    // Validate my token
-    const user = req.user;
-    res.send("User  Data: " + user);
-  } catch (error) {
-    res.status(400).send("Error : " + error.message);
-  }
-});
-
-app.post("/sendConnectionRequest", userAuth, async (req, res) => {
-  try {
-    res.send(
-      "Connection Request Sent Successfully " +
-        req.user.firstName +
-        " send the request"
-    );
-  } catch (error) {
-    res.status(400).send("Error : " + error.message);
-  }
-});
-
-//  Get user data by using the emailid
-
-app.get("/user", async (req, res) => {
-  try {
-    const userEmail = req.body.emailId;
-    console.log("userEmail is :", userEmail);
-    const users = await User.find({ emailId: userEmail });
-    res.send(users);
-  } catch (error) {
-    res.status(400).send("Error in finding the user");
-  }
-});
-
-// get all data in the database
-
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.send(users);
-  } catch (error) {
-    res.status(400).send("Error in finding the entire data in the database");
-  }
-});
-
-//* delete the documents in the database usingb the email id and the userid
-//? deleted using the emailid
-// app.delete("/delete", async (req, res) => {
-//   try {
-//     const userEmail = req.body.emailId;
-//     const users = await User.deleteOne({ emailId: userEmail });
-//     res.send("data is deleted successfully using the emailid");
-//   } catch (error) {
-//     res.status(400).send("Unable to delete the database ");
-//   }
-// });
-//! deleted using the userid
-
-app.delete("/delete", async (req, res) => {
-  try {
-    const userId = req.body._id;
-    const users = await User.deleteOne({ _id: userId });
-    res.send("data successfully deleted using the _id ");
-  } catch (error) {
-    res.status(400).send("Unable to delete the database");
-  }
-});
-
-//* update the document using the userid
-
-app.patch("/update", async (req, res) => {
-  try {
-    const userId = req.body._id;
-
-    // Check if _id is provided
-    if (!userId) {
-      return res.status(400).send("User ID (_id) is required in request body");
-    }
-
-    // Remove _id from the update data
-    const { _id, ...updatedData } = req.body;
-
-    // Check if there's any data to update
-    if (Object.keys(updatedData).length === 0) {
-      return res.status(400).send("No fields to update");
-    }
-
-    const user = await User.findByIdAndUpdate(userId, updatedData, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
-
-    res.send("Successfully updated the data");
-  } catch (error) {
-    console.error("Update Error:", error.message);
-    res.status(400).send("Unable to update the database: " + error.message);
-  }
-});
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
 
 connectDB()
   .then(() => {
