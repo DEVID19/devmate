@@ -13,11 +13,10 @@ const connectionSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-
     status: {
       type: String,
       required: true,
-      enum: ["interested", "accepted", "rejected", "ignore"],
+      enum: ["interested", "accepted", "rejected", "ignored"],
     },
   },
   { timestamps: true }
